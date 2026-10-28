@@ -1,8 +1,9 @@
 import React from 'react';
-import { Download, Sparkles } from 'lucide-react';
+import { Download, Sparkles, BarChart3 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenGuide: () => void;
+  onOpenDashboard?: () => void;
   onPrint: () => void;
   onScrollToForm: () => void;
   onScrollToPreview: () => void;
@@ -12,6 +13,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenGuide,
+  onOpenDashboard,
   onPrint,
   onScrollToForm,
   onScrollToPreview,
@@ -58,10 +60,32 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Conseils sans expérience
           </button>
+          {onOpenDashboard && (
+            <button
+              type="button"
+              onClick={onOpenDashboard}
+              className="hover:text-white transition-colors whitespace-nowrap shrink-0 py-2 flex items-center gap-1.5 text-blue-200"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-amber-300" />
+              <span>Statistiques</span>
+            </button>
+          )}
         </nav>
 
         {/* Zone 3: 1 Primary Action (with mobile touch target >= 44px) */}
         <div className="flex items-center gap-2 shrink-0">
+          {onOpenDashboard && (
+            <button
+              type="button"
+              onClick={onOpenDashboard}
+              className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center text-blue-200 hover:text-white p-2 rounded-lg"
+              title="Statistiques & Dashboard"
+              aria-label="Statistiques & Dashboard"
+            >
+              <BarChart3 className="w-5 h-5 text-amber-300" />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onOpenGuide}

@@ -5,6 +5,7 @@ node_modules/
 build/
 dist/
 server.js
+data/
 
 # Coverage
 coverage/

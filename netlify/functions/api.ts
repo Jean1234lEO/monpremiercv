@@ -2,6 +2,12 @@ import type { Context } from '@netlify/functions';
 import { GoogleGenAI } from '@google/genai';
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const netlifyEvents: Array<{
+  event: string;
+  ip: string;
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+}> = [];
 
 function isRateLimited(key: string, limit = 30, windowMs = 3600000): boolean {
   const now = Date.now();
@@ -62,8 +68,94 @@ export default async (req: Request, context: Context) => {
     );
   }
 
+  // ── Route: /api/dashboard/stats ────────────────────────────────────
+  if (url.pathname.endsWith('/dashboard/stats') && req.method === 'GET') {
+    const secret = process.env.DASHBOARD_SECRET?.trim();
+    if (secret) {
+      const auth = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+      const tokenHeader = req.headers.get('x-dashboard-token')?.trim();
+      const tokenQuery = url.searchParams.get('token')?.trim();
+      const token = tokenHeader || auth || tokenQuery;
+      if (token !== secret) {
+        return new Response(
+          JSON.stringify({ error: 'Accès non autorisé : token invalide.', code: 'UNAUTHORIZED' }),
+          { status: 401, headers }
+        );
+      }
+    }
+
+    const count = (type: string) => netlifyEvents.filter((e) => e.event === type).length;
+    const cvsCreated = count('cv_created');
+    const downloads = count('cv_downloaded');
+    const uniqueIps = new Set(netlifyEvents.map((e) => e.ip));
+
+    const templates: Record<string, number> = { classic: 0, modern: 0, 'two-column': 0, minimalist: 0 };
+    const aiSections: Record<string, number> = { profile: 0, skills: 0, projects: 0, experience: 0, education: 0 };
+
+    for (const e of netlifyEvents) {
+      if (e.metadata?.templateId && typeof e.metadata.templateId === 'string') {
+        templates[e.metadata.templateId] = (templates[e.metadata.templateId] || 0) + 1;
+      }
+      if (e.event === 'ai_improve_used' && e.metadata?.section && typeof e.metadata.section === 'string') {
+        aiSections[e.metadata.section] = (aiSections[e.metadata.section] || 0) + 1;
+      }
+    }
+
+    const conversionRate = cvsCreated > 0
+      ? Math.round((downloads / cvsCreated) * 100)
+      : downloads > 0 ? 100 : 0;
+
+    return new Response(
+      JSON.stringify({
+        totalCvsCreated: cvsCreated,
+        totalDownloads: downloads,
+        totalAiImprovements: count('ai_improve_used'),
+        totalPresetsLoaded: count('preset_loaded'),
+        totalJsonExports: count('json_exported'),
+        totalJsonImports: count('json_imported'),
+        totalPhotoUploads: count('photo_uploaded'),
+        totalTemplateChanges: count('template_changed'),
+        totalPreviews: count('cv_previewed'),
+        uniqueUsers: uniqueIps.size,
+        conversionRate,
+        templates,
+        aiSections,
+        server: {
+          platform: 'netlify-functions',
+          aiConfigured: Boolean(apiKey && apiKey !== 'MY_GEMINI_API_KEY'),
+        },
+        recentEvents: netlifyEvents
+          .slice(-30)
+          .reverse()
+          .map((e) => ({
+            event: e.event,
+            timestamp: e.timestamp,
+            ...(e.metadata ? { metadata: e.metadata } : {}),
+          })),
+        timestamp: new Date().toISOString(),
+      }),
+      { status: 200, headers }
+    );
+  }
+
   // ── Route: /api/dashboard/event ────────────────────────────────────
   if (url.pathname.endsWith('/dashboard/event') && req.method === 'POST') {
+    try {
+      const body = (await req.json()) as { event?: string; metadata?: Record<string, unknown> };
+      if (body?.event) {
+        netlifyEvents.push({
+          event: body.event,
+          ip: clientIp,
+          metadata: body.metadata,
+          timestamp: new Date().toISOString(),
+        });
+        if (netlifyEvents.length > 2000) {
+          netlifyEvents.splice(0, netlifyEvents.length - 2000);
+        }
+      }
+    } catch {
+      // ignore
+    }
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
   }
 

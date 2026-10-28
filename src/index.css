@@ -52,7 +52,7 @@
 /* Clean print formatting for A4 PDF download */
 @page {
   size: A4 portrait;
-  margin: 10mm 12mm;
+  margin: 6mm 8mm;
 }
 
 @media print {
@@ -93,8 +93,13 @@
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
-    min-height: auto !important;
+    min-height: 275mm !important;
     page-break-after: avoid;
+  }
+
+  /* Optimize print font sizes and spacing to fill the A4 page harmoniously */
+  #cv-printable .space-y-5 {
+    gap: 1.35rem !important;
   }
 
   .print-page-break-avoid {

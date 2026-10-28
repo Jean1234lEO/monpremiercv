@@ -13,6 +13,7 @@ import { CVFormEditor } from './components/CVFormEditor';
 import { CVPreviewToolbar } from './components/CVPreviewToolbar';
 import { CVRenderer } from './components/CVRenderer';
 import { AdviceGuideModal } from './components/AdviceGuideModal';
+import { DashboardModal } from './components/DashboardModal';
 import {
   FileText,
   CheckCircle2,
@@ -67,8 +68,21 @@ export default function App() {
 
   const [fontFamily, setFontFamily] = useState<'sans' | 'serif'>('sans');
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<'edit' | 'preview'>('edit');
   const [hasCopied, setHasCopied] = useState(false);
+
+  // Open dashboard if URL hash is #admin or #dashboard
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash === '#admin' || window.location.hash === '#dashboard') {
+        setIsDashboardOpen(true);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
 
   const formSectionRef = useRef<HTMLDivElement>(null);
   const previewSectionRef = useRef<HTMLDivElement>(null);
@@ -225,6 +239,7 @@ export default function App() {
       {/* Top Bar Navigation */}
       <Navbar
         onOpenGuide={() => setIsGuideOpen(true)}
+        onOpenDashboard={() => setIsDashboardOpen(true)}
         onPrint={handlePrint}
         onScrollToForm={switchToEdit}
         onScrollToPreview={switchToPreview}
@@ -355,6 +370,17 @@ export default function App() {
         onClose={() => setIsGuideOpen(false)}
       />
 
+      {/* Admin Dashboard Modal */}
+      <DashboardModal
+        isOpen={isDashboardOpen}
+        onClose={() => {
+          setIsDashboardOpen(false);
+          if (window.location.hash === '#admin' || window.location.hash === '#dashboard') {
+            history.replaceState(null, '', window.location.pathname);
+          }
+        }}
+      />
+
       {/* Footer */}
       <footer className="mt-auto py-6 px-4 border-t border-slate-200 bg-white text-center text-xs text-slate-500 no-print safe-bottom-padding lg:pb-6">
         <div className="max-w-7xl mx-auto space-y-1.5">
@@ -367,6 +393,14 @@ export default function App() {
             <span>Sauvegarde automatique locale</span>
             <span aria-hidden="true">·</span>
             <span>Format PDF A4</span>
+            <span aria-hidden="true">·</span>
+            <button
+              type="button"
+              onClick={() => setIsDashboardOpen(true)}
+              className="hover:text-slate-600 underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              Statistiques & Dashboard 📊
+            </button>
           </div>
         </div>
       </footer>

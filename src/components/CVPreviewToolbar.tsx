@@ -195,11 +195,16 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({
       </div>
 
       {/* Helper notice */}
-      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-start gap-2 leading-relaxed">
+      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-start gap-2.5 leading-relaxed">
         <FileCheck2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-        <span>
-          Pour obtenir ton PDF, choisis <strong>« Enregistrer au format PDF »</strong> dans la fenêtre d'impression de ton navigateur.
-        </span>
+        <div className="space-y-1">
+          <p>
+            Pour télécharger le PDF : clique sur le bouton ci-dessus et choisis destination <strong>« Enregistrer au format PDF »</strong>.
+          </p>
+          <p className="text-[11px] text-slate-500">
+            💡 <strong>Astuce plein écran A4</strong> : dans la fenêtre d'impression, ouvre <em>« Plus de paramètres »</em>, règle <strong>Marges sur « Aucune »</strong> et active <strong>« Graphiques d'arrière-plan »</strong>.
+          </p>
+        </div>
       </div>
     </div>
   );
