@@ -1,0 +1,7 @@
+{
+  "name": "MonPremierCV",
+  "description": "Créez un CV professionnel et percutant, même sans expérience professionnelle. Outil gratuit, respectueux de la vie privée et optimisé pour le format PDF A4.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
